@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign up • Accessibility AI Auditor</title>
+  <style>
+    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,sans-serif; background:#0b0f1a; color:#e7eaf0; }
+    .wrap { min-height:100vh; display:grid; place-items:center; padding:24px; }
+    .card { width:min(420px, 100%); background:#111a2e; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:18px; }
+    h1 { margin:0 0 8px; font-size:20px; }
+    p { margin:0 0 14px; opacity:.8; }
+    label { display:block; margin:10px 0 6px; font-size:13px; opacity:.9; }
+    input { width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b1224; color:#e7eaf0; }
+    button { margin-top:14px; width:100%; padding:10px; border-radius:10px; border:0; background:#4c7dff; color:white; font-weight:600; cursor:pointer; }
+    .row { display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:13px; }
+    a { color:#9bb7ff; text-decoration:none; }
+    .err { margin-top:10px; color:#ff6b6b; font-size:13px; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Create account</h1>
+      <p>Sign up to save analysis history.</p>
+
+      <form id="signupForm">
+        <label for="name">Name</label>
+        <input id="name" type="text" autocomplete="name" required />
+
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" required />
+
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="new-password" required />
+
+        <button type="submit">Sign up</button>
+        <div class="row">
+          <span>Already have an account?</span>
+          <a href="/login.html">Login</a>
+        </div>
+        <div id="err" class="err"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const errEl = document.getElementById("err");
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errEl.textContent = "";
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      const r = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name, email, password })
+      });
+
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        errEl.textContent = data.error || "Signup failed";
+        return;
+      }
+
+      location.href = "/";
+    });
+  </script>
+</body>
+</html>

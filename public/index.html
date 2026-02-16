@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Accessibility AI Auditor</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app-root {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .column {
+      padding: 10px;
+    }
+
+    .column-controls {
+      width: 20%;
+      min-width: 260px;
+      flex-shrink: 0;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .controls-header {
+      flex: 0 0 auto;
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid #e6e6e6;
+      background: #fff;
+    }
+
+    .controls-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 10px 12px;
+    }
+
+    .controls-user {
+      flex: 0 0 auto;
+      padding: 10px 12px;
+      border-top: 1px solid #e6e6e6;
+      background: #fff;
+    }
+
+    .app-main {
+      display: flex;
+      flex: 1;
+      width: auto;
+      min-width: 0;
+    }
+
+    .app-title {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1.2;
+    }
+
+    .app-subtitle {
+      margin: 6px 0 0;
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    .column-analysis,
+    .column-workspace {
+      flex: 1;
+      overflow-y: auto;
+      min-width: 0;
+    }
+
+    .column-analysis {
+      border-right: 1px solid #ddd;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+    }
+
+    .workspace-tabs {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 6px;
+    }
+
+    .workspace-tab {
+      border: none;
+      background: none;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    .workspace-tab.is-active {
+      border-bottom: 2px solid #000;
+      font-weight: bold;
+    }
+
+    .workspace-panel.is-hidden {
+      display: none;
+    }
+
+    .issue-card,
+    .fix-card {
+      border: 1px solid #ddd;
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    pre.code-block {
+      background: #f5f5f5;
+      padding: 8px;
+      overflow-x: auto;
+      border-radius: 10px;
+    }
+
+    .analysis-header {
+      border-bottom: 1px solid #eee;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+    }
+
+    .analysis-target-label {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .analysis-target-value {
+      margin: 0;
+      font-weight: bold;
+      word-break: break-word;
+    }
+
+    .controls-section {
+      margin-bottom: 14px;
+    }
+
+    .controls-section form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .controls-section label {
+      font-size: 0.92rem;
+      color: #222;
+    }
+
+    input[type="url"],
+    input[type="file"],
+    select {
+      width: 100%;
+      padding: 8px 10px;
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.92rem;
+    }
+
+    .mode-btn.is-active {
+      border-color: #111;
+      font-weight: 700;
+    }
+
+    .mode-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .is-hidden {
+      display: none !important;
+    }
+
+    .history-panel {
+      margin-top: 18px;
+      border: 1px solid rgba(0, 0, 0, 0.10);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .history-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .history-status {
+      margin-top: 10px;
+      font-size: 13px;
+      opacity: 0.85;
+      min-height: 18px;
+    }
+
+    .history-list {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .history-item {
+      border: 1px solid rgba(0, 0, 0, 0.10);
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      background: #fafafa;
+    }
+
+    .history-meta {
+      display: grid;
+      gap: 6px;
+    }
+
+    .history-title {
+      font-weight: 650;
+      font-size: 14px;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .history-sub {
+      font-size: 12px;
+      opacity: 0.85;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .history-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .btn {
+      border: 1px solid rgba(0, 0, 0, 0.18);
+      background: transparent;
+      color: inherit;
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .btn:hover {
+      border-color: rgba(0, 0, 0, 0.35);
+    }
+
+    .btn-ghost {
+      opacity: 0.92;
+    }
+
+    .btn-primary {
+      border-color: rgba(30, 90, 255, 0.55);
+      background: rgba(30, 90, 255, 0.08);
+    }
+
+    .btn-primary:hover {
+      border-color: rgba(30, 90, 255, 0.95);
+      background: rgba(30, 90, 255, 0.12);
+    }
+
+    .btn-danger {
+      border-color: rgba(255, 80, 80, 0.6);
+    }
+
+    .btn-danger:hover {
+      border-color: rgba(255, 80, 80, 0.95);
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 0, 0, 0.18);
+      background: transparent;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .icon-btn:hover {
+      border-color: rgba(0, 0, 0, 0.35);
+    }
+
+    .severity-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .severity-table th,
+    .severity-table td {
+      border: 1px solid #ddd;
+      padding: 4px 6px;
+      font-size: 0.9rem;
+    }
+
+    .preview-viewport {
+      border: 1px dashed #aaa;
+      padding: 10px;
+      margin-top: 8px;
+      min-height: 320px;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .scan-status {
+      margin: 10px 0 0;
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 0, 0, .12);
+      background: #fbfbfb;
+      min-height: 18px;
+    }
+
+    .scan-status.is-error {
+      border-color: rgba(255, 80, 80, .5);
+      background: rgba(255, 80, 80, .08);
+    }
+
+    .scan-status.is-ok {
+      border-color: rgba(0, 150, 80, .45);
+      background: rgba(0, 150, 80, .08);
+    }
+
+    .issue-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app-root">
+
+    <!-- ========= COLUMN 1: CONTROLS & HISTORY ========= -->
+    <aside class="column column-controls" aria-label="Scan controls and history">
+      <header class="controls-header">
+        <h1 class="app-title">Accessibility AI Auditor</h1>
+        <p class="app-subtitle">Analyze a page for accessibility issues with Gen AI.</p>
+        <div id="scan-status" class="scan-status" role="status" aria-live="polite"></div>
+      </header>
+
+      <div class="controls-scroll">
+
+        <section class="controls-section controls-mode">
+          <h2 class="section-title">Input Mode</h2>
+          <div class="mode-toggle">
+            <button type="button" class="mode-btn is-active" data-mode="url">URL Mode</button>
+            <button type="button" class="mode-btn" data-mode="file">File Mode</button>
+          </div>
+        </section>
+
+        <section class="controls-section controls-url">
+          <h2 class="section-title">Scan a URL</h2>
+          <form class="url-form">
+            <label for="urlInput">Page URL</label>
+            <input id="urlInput" name="urlInput" type="url" placeholder="https://example.com/page">
+            <button id="urlSubmitBtn" type="submit" class="btn btn-primary">Run Accessibility Scan</button>
+          </form>
+        </section>
+
+        <section class="controls-section controls-file is-hidden">
+          <h2 class="section-title">Analyze a File</h2>
+          <form class="file-form">
+            <label for="fileInput">Upload HTML</label>
+            <input id="fileInput" name="fileInput" type="file" accept=".html,.htm,text/html">
+            <div style="font-size:12px; opacity:.8;">
+              Currently supported: <strong>HTML</strong> (JS/JSON coming later)
+            </div>
+            <button id="fileSubmitBtn" type="submit" class="btn btn-primary" disabled>Analyze File</button>
+          </form>
+        </section>
+
+        <section class="controls-section controls-filters">
+          <h2 class="section-title">Filters</h2>
+          <fieldset class="filter-severity">
+            <legend>Severity</legend>
+            <label><input type="checkbox" name="severity" value="critical" checked> Critical</label>
+            <label><input type="checkbox" name="severity" value="high" checked> High</label>
+            <label><input type="checkbox" name="severity" value="moderate" checked> Moderate</label>
+            <label><input type="checkbox" name="severity" value="low" checked> Low</label>
+          </fieldset>
+        </section>
+
+        <section class="history-panel" aria-labelledby="history-title">
+          <div class="history-header">
+            <h2 id="history-title">Recent analyses</h2>
+
+            <div class="history-actions">
+              <button id="btn-refresh-history" type="button" class="btn btn-ghost">Refresh</button>
+            </div>
+          </div>
+
+          <div id="history-status" class="history-status" role="status" aria-live="polite"></div>
+
+          <div id="history-list" class="history-list" role="list"></div>
+        </section>
+
+      </div>
+
+      <section class="controls-user">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div id="userAvatar"
+            style="width:34px;height:34px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-weight:700;">
+            ?
+          </div>
+          <div style="flex:1;">
+            <div id="userName" style="font-weight:700;">User</div>
+            <button id="logoutBtn" type="button" style="margin-top:4px;">Logout</button>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- ========= MAIN AREA (COLUMN 2 + COLUMN 3) ========= -->
+    <main class="app-main">
+
+      <!-- ===== COLUMN 2: ANALYSIS ===== -->
+      <section class="column column-analysis" aria-label="Accessibility analysis">
+        <header class="analysis-header">
+          <p class="analysis-target-label">Current target:</p>
+          <p class="analysis-target-value" data-target-type="url">No page analyzed yet.</p>
+        </header>
+
+        <section class="analysis-section analysis-overview">
+          <h2 class="section-title">Overview</h2>
+          <p class="overview-score">Accessibility Score: <strong>– / 100</strong></p>
+          <p class="overview-text">Run a scan to see a high-level summary of accessibility issues for the page.</p>
+        </section>
+
+        <section class="analysis-section analysis-severity">
+          <h2 class="section-title">Issues by Severity</h2>
+          <table class="severity-table">
+            <thead>
+              <tr>
+                <th>Severity</th>
+                <th>Count</th>
+                <th>Examples</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-severity="critical">
+                <td>Critical</td>
+                <td>0</td>
+                <td>Keyboard traps, blocking issues</td>
+              </tr>
+              <tr data-severity="high">
+                <td>High</td>
+                <td>0</td>
+                <td>Missing alt text, bad contrast</td>
+              </tr>
+              <tr data-severity="moderate">
+                <td>Moderate</td>
+                <td>0</td>
+                <td>Heading order, labels</td>
+              </tr>
+              <tr data-severity="low">
+                <td>Low</td>
+                <td>0</td>
+                <td>Minor ARIA hints</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="analysis-section analysis-issues">
+          <h2 class="section-title">Detected Issues</h2>
+          <p>No issues loaded yet. Run a scan to populate this list.</p>
+        </section>
+      </section>
+
+      <!-- ===== COLUMN 3: WORKSPACE (TABS) ===== -->
+      <section class="column column-workspace" aria-label="Code and preview workspace">
+
+        <nav class="workspace-tabs" aria-label="Workspace views">
+          <button type="button" class="workspace-tab is-active" data-tab-target="preview-panel">Preview</button>
+          <button type="button" class="workspace-tab" data-tab-target="code-panel">Code</button>
+          <button type="button" class="workspace-tab" data-tab-target="fixes-panel">Fixes / Diff</button>
+        </nav>
+
+        <section class="workspace-panel" id="preview-panel" aria-label="Page preview">
+          <header>
+            <h2 class="section-title">Page Preview</h2>
+            <p class="panel-description">
+              This renders the analyzed HTML snapshot. When you click "View on page"
+              for an issue, it will scroll to and highlight the affected element.
+            </p>
+            <div id="preview-mode-hint" style="font-size:12px; opacity:.75;"></div>
+          </header>
+
+          <div class="preview-viewport">
+            <iframe id="preview-frame" title="Page preview"
+              style="width: 100%; height: 100%; border: none; min-height: 320px;" src="about:blank"></iframe>
+          </div>
+        </section>
+
+        <section class="workspace-panel is-hidden" id="code-panel" aria-label="Original source code">
+          <header>
+            <h2 class="section-title">Original Code</h2>
+            <p class="panel-description">Shows the stored HTML snapshot for this analysis.</p>
+          </header>
+          <pre id="code-block" class="code-block"><!-- Run a scan to load code --></pre>
+        </section>
+
+        <section class="workspace-panel is-hidden" id="fixes-panel" aria-label="Suggested fixes and diffs">
+          <header>
+            <h2 class="section-title">Suggested Fixes &amp; Diffs</h2>
+            <p class="panel-description">
+              Click “View code fix” on an issue. You can apply fixes and preview/download the patched HTML.
+            </p>
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+              <button id="btn-apply-fixes" class="btn btn-primary" type="button" disabled>Apply Fixes & Preview</button>
+              <button id="btn-download-fixed" class="btn" type="button" disabled>Download Fixed HTML</button>
+              <button id="btn-preview-original" class="btn" type="button" disabled>Back to Original Preview</button>
+            </div>
+
+            <div id="fixes-status" style="margin-top:10px; font-size:13px; opacity:.85;"></div>
+          </header>
+
+          <div id="fixes-list" style="margin-top:12px;"></div>
+        </section>
+
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = "";
+    let currentAnalysisId = null;
+    let currentAnalysis = null;
+
+    // Fix state
+    let lastFixes = [];
+    let lastPatchedHtml = null;
+    let originalPreviewSrc = null; // "/preview/:id" for URL/file analyses
+
+    // ---------- helpers ----------
+    function setScanStatus(msg, kind = "") {
+      const el = document.getElementById("scan-status");
+      if (!el) return;
+      el.classList.remove("is-error", "is-ok");
+      if (kind === "error") el.classList.add("is-error");
+      if (kind === "ok") el.classList.add("is-ok");
+      el.textContent = msg || "";
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getIssueStableId(issue) {
+      return issue.id || issue.ruleId || issue.title || "unknown-issue";
+    }
+
+    function getHost(url) {
+      try { return url ? new URL(url).hostname : "—"; }
+      catch { return "—"; }
+    }
+
+    async function jsonFetch(url, opts = {}) {
+      const r = await fetch(url, { credentials: "include", ...opts });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || data.message || `Request failed (${r.status})`);
+      return data;
+    }
+
+    function setPreviewHint(text) {
+      const el = document.getElementById("preview-mode-hint");
+      if (el) el.textContent = text || "";
+    }
+
+    // Inject a small helper into any HTML so "View on page" works in srcdoc previews too
+    function buildPreviewDoc(html) {
+      const helper = `
+<script>
+  (function() {
+    function clearPrev() {
+      const prev = document.querySelectorAll('[data-a11y-highlight="1"]');
+      prev.forEach(el => {
+        el.removeAttribute('data-a11y-highlight');
+        el.style.outline = '';
+        el.style.outlineOffset = '';
+        el.style.scrollMarginTop = '';
+      });
+    }
+
+    window.addEventListener("message", function(ev) {
+      const msg = ev.data || {};
+      if (msg.type !== "scrollToSelector" || !msg.selector) return;
+      try {
+        const el = document.querySelector(msg.selector);
+        if (!el) return;
+        clearPrev();
+        el.setAttribute('data-a11y-highlight', '1');
+        el.style.outline = '3px solid #ff3b30';
+        el.style.outlineOffset = '2px';
+        el.style.scrollMarginTop = '80px';
+        el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      } catch (e) {}
+    });
+  })();
+<\/script>
+      `.trim();
+
+      const s = String(html || "");
+      if (s.includes("</body>")) return s.replace("</body>", `${helper}\n</body>`);
+      return s + "\n" + helper;
+    }
+
+    function setIframeToOriginal() {
+      if (!currentAnalysisId) return;
+      const iframe = document.getElementById("preview-frame");
+      if (!iframe) return;
+
+      // restore original route preview
+      iframe.removeAttribute("srcdoc");
+      iframe.src = originalPreviewSrc || `/preview/${encodeURIComponent(currentAnalysisId)}`;
+      setPreviewHint("Preview: original snapshot (server preview route).");
+
+      const btnBack = document.getElementById("btn-preview-original");
+      if (btnBack) btnBack.disabled = true;
+    }
+
+    function setIframeToPatched(html) {
+      const iframe = document.getElementById("preview-frame");
+      if (!iframe) return;
+
+      iframe.src = "about:blank";
+      iframe.srcdoc = buildPreviewDoc(html);
+
+      setPreviewHint("Preview: patched HTML (client srcdoc).");
+
+      const btnBack = document.getElementById("btn-preview-original");
+      if (btnBack) btnBack.disabled = false;
+    }
+
+    function downloadTextFile(filename, text) {
+      const blob = new Blob([text], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    // ---------- auth ----------
+    async function requireLoginOrRedirect() {
+      const r = await fetch("/api/auth/me", { credentials: "include" });
+      const data = await r.json().catch(() => ({}));
+      if (!data.user) {
+        location.href = "/login.html";
+        return null;
+      }
+      return data.user;
+    }
+
+    function setUserChip(user) {
+      document.getElementById("userName").textContent = user.name || user.email || "User";
+      document.getElementById("userAvatar").textContent =
+        (user.initials || (user.name?.[0] || "U")).toUpperCase();
+    }
+
+    async function setupLogout() {
+      const btn = document.getElementById("logoutBtn");
+      btn.addEventListener("click", async () => {
+        await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+        location.href = "/login.html";
+      });
+    }
+
+    // ---------- tabs ----------
+    function setupTabs() {
+      const tabButtons = document.querySelectorAll(".workspace-tab");
+      const panels = document.querySelectorAll(".workspace-panel");
+
+      tabButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const targetId = btn.getAttribute("data-tab-target");
+
+          tabButtons.forEach(b => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
+
+          panels.forEach(panel => {
+            panel.classList.toggle("is-hidden", panel.id !== targetId);
+          });
+        });
+      });
+    }
+
+    // ---------- mode toggle ----------
+    function setupModeToggle() {
+      const buttons = document.querySelectorAll(".mode-btn[data-mode]");
+      const urlSection = document.querySelector(".controls-url");
+      const fileSection = document.querySelector(".controls-file");
+
+      buttons.forEach(b => {
+        b.addEventListener("click", () => {
+          const mode = b.getAttribute("data-mode");
+
+          buttons.forEach(x => x.classList.remove("is-active"));
+          b.classList.add("is-active");
+
+          setScanStatus("");
+
+          if (mode === "url") {
+            urlSection?.classList.remove("is-hidden");
+            fileSection?.classList.add("is-hidden");
+          } else {
+            urlSection?.classList.add("is-hidden");
+            fileSection?.classList.remove("is-hidden");
+          }
+        });
+      });
+    }
+
+    // ---------- filters ----------
+    function getEnabledSeverities() {
+      const checks = document.querySelectorAll('input[type="checkbox"][name="severity"]');
+      const enabled = new Set();
+      checks.forEach(c => { if (c.checked) enabled.add(c.value); });
+      return enabled;
+    }
+
+    function issuePassesFilter(issue) {
+      const enabled = getEnabledSeverities();
+      const sev = String(issue.severity || "").toLowerCase();
+      if (!enabled.size) return true;
+      return enabled.has(sev);
+    }
+
+    function setupSeverityFilters() {
+      const checks = document.querySelectorAll('input[type="checkbox"][name="severity"]');
+      checks.forEach(c => {
+        c.addEventListener("change", () => {
+          if (currentAnalysis) renderAnalysis(currentAnalysis);
+        });
+      });
+    }
+
+    // ---------- analyze calls ----------
+    async function analyzeUrl(url) {
+      const res = await fetch(`${API_BASE}/api/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ mode: "url", url })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.message || `Analyze failed (${res.status})`);
+      return data;
+    }
+
+    async function analyzeFile(file) {
+      const fd = new FormData();
+      fd.append("mode", "file");
+      fd.append("file", file);
+
+      const res = await fetch(`${API_BASE}/api/analyze`, {
+        method: "POST",
+        credentials: "include",
+        body: fd
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.message || `Analyze failed (${res.status})`);
+      return data;
+    }
+
+    // ---------- scan forms ----------
+    function setupScanForms() {
+      // URL
+      const urlForm = document.querySelector(".url-form");
+      urlForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const urlInput = document.getElementById("urlInput");
+        const url = (urlInput?.value || "").trim();
+        if (!url) return;
+
+        setScanStatus("Scanning URL…");
+        try {
+          const analysis = await analyzeUrl(url);
+          renderAnalysis(analysis);
+          await loadRecentAnalyses();
+          setScanStatus("Scan completed.", "ok");
+        } catch (err) {
+          console.error(err);
+          setScanStatus(err.message || "Scan failed.", "error");
+        }
+      });
+
+      // FILE
+      const fileInput = document.getElementById("fileInput");
+      const fileSubmitBtn = document.getElementById("fileSubmitBtn");
+
+      fileInput?.addEventListener("change", () => {
+        const file = fileInput.files?.[0] || null;
+        fileSubmitBtn.disabled = !file;
+      });
+
+      const fileForm = document.querySelector(".file-form");
+      fileForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const file = fileInput.files?.[0] || null;
+        if (!file) return;
+
+        setScanStatus("Uploading & scanning HTML…");
+        try {
+          const analysis = await analyzeFile(file);
+          renderAnalysis(analysis);
+          await loadRecentAnalyses();
+          setScanStatus("File scan completed.", "ok");
+        } catch (err) {
+          console.error(err);
+          setScanStatus(err.message || "File scan failed.", "error");
+        }
+      });
+    }
+
+    // ---------- render analysis ----------
+    function renderAnalysis(analysis) {
+      currentAnalysis = analysis;
+      currentAnalysisId = analysis.analysisId || null;
+
+      // reset fix state
+      lastFixes = [];
+      lastPatchedHtml = null;
+      updateFixButtons();
+
+      // preview
+      const iframe = document.getElementById("preview-frame");
+      if (iframe && currentAnalysisId) {
+        originalPreviewSrc = `/preview/${encodeURIComponent(currentAnalysisId)}`;
+        iframe.removeAttribute("srcdoc");
+        iframe.src = originalPreviewSrc;
+        setPreviewHint("Preview: original snapshot.");
+        document.getElementById("btn-preview-original").disabled = true;
+      }
+
+      // target
+      const targetValueEl = document.querySelector(".analysis-target-value");
+      if (targetValueEl) targetValueEl.textContent = analysis.target?.value || analysis.url || "N/A";
+
+      // overview
+      const overviewScoreEl = document.querySelector(".overview-score strong");
+      if (overviewScoreEl && typeof analysis.score === "number") overviewScoreEl.textContent = `${analysis.score} / 100`;
+      else if (overviewScoreEl) overviewScoreEl.textContent = `– / 100`;
+
+      const overviewTextEl = document.querySelector(".overview-text");
+      if (overviewTextEl && analysis.overview) overviewTextEl.textContent = analysis.overview;
+
+      // severity summary
+      const summary = analysis.severitySummary || {};
+      const severityRows = document.querySelectorAll(".severity-table tbody tr");
+      severityRows.forEach(row => {
+        const sev = row.getAttribute("data-severity");
+        const countCell = row.querySelector("td:nth-child(2)");
+        if (sev && countCell) countCell.textContent = summary[sev] ?? 0;
+      });
+
+      // code panel
+      const codeBlock = document.getElementById("code-block");
+      if (codeBlock) {
+        const html = analysis.html || "";
+        codeBlock.textContent = html ? html : "No HTML snapshot stored for this analysis.";
+      }
+
+      // issues list
+      const issuesSection = document.querySelector(".analysis-issues");
+      if (!issuesSection) return;
+
+      issuesSection.innerHTML = `<h2 class="section-title">Detected Issues</h2>`;
+
+      const issues = Array.isArray(analysis.issues) ? analysis.issues : [];
+      const visibleIssues = issues.filter(issuePassesFilter);
+
+      if (!visibleIssues.length) {
+        issuesSection.insertAdjacentHTML("beforeend", `<p style="opacity:.75;">No issues match current filters.</p>`);
+        clearFixesPanel();
+        return;
+      }
+
+      visibleIssues.forEach((issue, idx) => {
+        const article = document.createElement("article");
+        article.className = "issue-card";
+
+        const issueStableId = getIssueStableId(issue);
+        article.dataset.issueId = issueStableId;
+        article.dataset.issueIndex = String(idx);
+
+        const firstInstance = (issue.instances && issue.instances[0]) || null;
+        if (firstInstance?.selector) article.dataset.selector = firstInstance.selector;
+
+        article.dataset.issueJson = JSON.stringify(issue);
+
+        article.innerHTML = `
+          <header class="issue-header">
+            <h3 class="issue-title">${escapeHtml(issue.title || issue.ruleId || "Untitled issue")}</h3>
+            <p class="issue-meta">
+              Severity: <strong>${escapeHtml(issue.severity || "unknown")}</strong>
+              ${issue.instances ? ` • Affects: <strong>${issue.instances.length} element(s)</strong>` : ""}
+            </p>
+          </header>
+
+          <p class="issue-description">${escapeHtml(issue.description || "")}</p>
+
+          <p class="issue-wcag">
+            WCAG References:
+            <span>${(issue.wcag || []).map(escapeHtml).join(", ") || "N/A"}</span>
+          </p>
+
+          <div class="issue-actions">
+            <button type="button" class="btn btn-ghost" data-action="view-on-page">View on page</button>
+            <button type="button" class="btn btn-primary" data-action="view-code-fix">View code fix</button>
+          </div>
+        `;
+        issuesSection.appendChild(article);
+      });
+
+      clearFixesPanel();
+    }
+
+    function clearFixesPanel() {
+      const fixesList = document.getElementById("fixes-list");
+      const fixesStatus = document.getElementById("fixes-status");
+      if (fixesList) fixesList.innerHTML = "";
+      if (fixesStatus) fixesStatus.textContent = "";
+    }
+
+    function updateFixButtons() {
+      const btnApply = document.getElementById("btn-apply-fixes");
+      const btnDownload = document.getElementById("btn-download-fixed");
+      const btnBack = document.getElementById("btn-preview-original");
+
+      if (btnApply) btnApply.disabled = !(currentAnalysisId && lastFixes.length);
+      if (btnDownload) btnDownload.disabled = !(lastPatchedHtml && lastPatchedHtml.length);
+      if (btnBack) btnBack.disabled = !(lastPatchedHtml && lastPatchedHtml.length);
+    }
+
+    // ---------- issue actions ----------
+    function setupIssueClickDelegation() {
+      const analysisColumn = document.querySelector(".column-analysis");
+      if (!analysisColumn) return;
+
+      analysisColumn.addEventListener("click", async (e) => {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+
+        const action = btn.getAttribute("data-action");
+        const card = btn.closest(".issue-card");
+        if (!card) return;
+        if (!currentAnalysisId) return;
+
+        if (action === "view-on-page") {
+          const selector = card.dataset.selector;
+          if (!selector) return;
+
+          const iframe = document.getElementById("preview-frame");
+          if (!iframe || !iframe.contentWindow) return;
+
+          iframe.contentWindow.postMessage({ type: "scrollToSelector", selector }, "*");
+        }
+
+        if (action === "view-code-fix") {
+          const issue = JSON.parse(card.dataset.issueJson || "{}");
+          await handleViewCodeFix(issue);
+        }
+      });
+    }
+
+    async function handleViewCodeFix(issue) {
+      const fixesStatus = document.getElementById("fixes-status");
+      if (fixesStatus) fixesStatus.textContent = "Generating fix…";
+
+      try {
+        const res = await fetch(`${API_BASE}/api/fix`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ analysisId: currentAnalysisId, issueId: issue.id })
+        });
+        if (!issue?.id) throw new Error("Issue id missing (cannot request fix).");
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || data.message || `Fix failed (${res.status})`);
+
+        // expecting { fixes: [...] }
+        const fixes = Array.isArray(data.fixes) ? data.fixes : [];
+        lastFixes = fixes;
+
+        renderFixes(data);
+
+        if (fixesStatus) fixesStatus.textContent = fixes.length ? `Fix ready (${fixes.length} change(s)).` : "No fix returned.";
+        updateFixButtons();
+
+        // switch tab
+        const fixesTabButton = document.querySelector('.workspace-tab[data-tab-target="fixes-panel"]');
+        if (fixesTabButton) fixesTabButton.click();
+      } catch (err) {
+        console.error(err);
+        if (fixesStatus) fixesStatus.textContent = err.message || "Fix failed.";
+        lastFixes = [];
+        updateFixButtons();
+      }
+    }
+
+    function renderFixes(fixData) {
+      const fixesList = document.getElementById("fixes-list");
+      if (!fixesList) return;
+
+      fixesList.innerHTML = "";
+
+      const fixes = Array.isArray(fixData.fixes) ? fixData.fixes : [];
+      if (!fixes.length) {
+        fixesList.innerHTML = `<p style="opacity:.75;">No fix data returned.</p>`;
+        return;
+      }
+
+      fixes.forEach(fix => {
+        const card = document.createElement("article");
+        card.className = "fix-card";
+        card.innerHTML = `
+          <header class="fix-header">
+            <h3 class="fix-title">Fix for: ${escapeHtml(fix.issueTitle || "Issue")}</h3>
+            <p class="fix-meta">${fix.severity ? `Severity: <strong>${escapeHtml(fix.severity)}</strong>` : ""}</p>
+          </header>
+
+          <section class="fix-explanation">
+            <h4>What changed &amp; why</h4>
+            <p>${escapeHtml(fix.explanation || "")}</p>
+          </section>
+
+          <section class="fix-diff">
+            <h4>Before</h4>
+            <pre class="code-block">${escapeHtml(fix.before || "")}</pre>
+            <h4>After</h4>
+            <pre class="code-block">${escapeHtml(fix.after || "")}</pre>
+          </section>
+        `;
+        fixesList.appendChild(card);
+      });
+    }
+
+    // ---------- apply + download ----------
+    function setupFixButtons() {
+      const btnApply = document.getElementById("btn-apply-fixes");
+      const btnDownload = document.getElementById("btn-download-fixed");
+      const btnBack = document.getElementById("btn-preview-original");
+      const fixesStatus = document.getElementById("fixes-status");
+
+      btnApply?.addEventListener("click", async () => {
+        if (!currentAnalysisId || !lastFixes.length) return;
+
+        if (fixesStatus) fixesStatus.textContent = "Applying fixes…";
+
+        try {
+          const res = await fetch(`${API_BASE}/api/fix/apply`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ analysisId: currentAnalysisId, fixes: lastFixes })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || data.message || `Apply failed (${res.status})`);
+
+          lastPatchedHtml = data.patchedHtml || "";
+          if (!lastPatchedHtml) throw new Error("No patchedHtml returned from /api/fix/apply");
+
+          setIframeToPatched(lastPatchedHtml);
+
+          if (fixesStatus) fixesStatus.textContent = "Applied. Preview updated.";
+          updateFixButtons();
+
+          // jump to Preview tab automatically
+          const previewTab = document.querySelector('.workspace-tab[data-tab-target="preview-panel"]');
+          previewTab?.click();
+        } catch (err) {
+          console.error(err);
+          if (fixesStatus) fixesStatus.textContent = err.message || "Apply failed.";
+        }
+      });
+
+      btnDownload?.addEventListener("click", () => {
+        if (!lastPatchedHtml) return;
+        const base = (currentAnalysis?.target?.value || "fixed").replace(/[^\w\-]+/g, "_");
+        downloadTextFile(`${base}_fixed.html`, lastPatchedHtml);
+      });
+
+      btnBack?.addEventListener("click", () => {
+        setIframeToOriginal();
+      });
+    }
+
+    // ---------- history ----------
+    async function loadRecentAnalyses() {
+      const list = document.getElementById("history-list");
+      const status = document.getElementById("history-status");
+      if (!list) return;
+
+      status.textContent = "Loading…";
+      list.innerHTML = "";
+
+      try {
+        const data = await jsonFetch("/api/analyses/recent?limit=30", { method: "GET" });
+        const items = data.items || [];
+
+        if (!items.length) {
+          status.textContent = "No analyses yet.";
+          return;
+        }
+
+        status.textContent = `${items.length} item(s).`;
+
+        list.innerHTML = items.map((it) => {
+          const id = it.analysisId;
+          const host = getHost(it.url);
+          const when = it.createdAt ? new Date(it.createdAt).toLocaleString() : "";
+          const title = it.title || it.url || it.target?.value || "Analysis";
+
+          return `
+            <div class="history-item" role="listitem" data-analysis-id="${escapeHtml(id)}">
+              <div class="history-meta">
+                <div class="history-title">${escapeHtml(title)}</div>
+                <div class="history-sub">${escapeHtml(host)}${when ? " • " + escapeHtml(when) : ""}</div>
+              </div>
+              <div class="history-controls">
+                <button type="button" class="btn btn-ghost" data-action="open">Open</button>
+                <button type="button" class="icon-btn" data-action="delete" aria-label="Delete this analysis">🗑️</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      } catch (err) {
+        console.error(err);
+        status.textContent = err.message || "Failed to load history.";
+      }
+    }
+
+    async function openAnalysisFromHistory(analysisId) {
+      const data = await jsonFetch(`/api/analyses/${encodeURIComponent(analysisId)}`, { method: "GET" });
+      if (data?.analysis) {
+        renderAnalysis(data.analysis);
+        setScanStatus("Loaded analysis.", "ok");
+      }
+    }
+
+    async function deleteOneHistory(analysisId) {
+      await jsonFetch(`/api/analyses/${encodeURIComponent(analysisId)}`, { method: "DELETE" });
+    }
+
+    function setupHistoryUI() {
+      const list = document.getElementById("history-list");
+      const status = document.getElementById("history-status");
+      const btnRefresh = document.getElementById("btn-refresh-history");
+
+      btnRefresh?.addEventListener("click", async () => {
+        status.textContent = "Refreshing…";
+        await loadRecentAnalyses();
+      });
+
+      list?.addEventListener("click", async (e) => {
+        const btn = e.target.closest("button[data-action]");
+        const row = e.target.closest(".history-item");
+        if (!row) return;
+
+        const analysisId = row.getAttribute("data-analysis-id");
+        if (!analysisId) return;
+
+        const action = btn?.getAttribute("data-action") || "open";
+
+        try {
+          if (action === "open") {
+            status.textContent = "Opening…";
+            await openAnalysisFromHistory(analysisId);
+            status.textContent = "Loaded.";
+          } else if (action === "delete") {
+            if (!confirm("Delete this analysis from history?")) return;
+            status.textContent = "Deleting…";
+            await deleteOneHistory(analysisId);
+            await loadRecentAnalyses();
+            status.textContent = "Deleted.";
+          }
+        } catch (err) {
+          console.error(err);
+          status.textContent = err.message || "History action failed.";
+        }
+      });
+    }
+
+    // ---------- init ----------
+    document.addEventListener("DOMContentLoaded", async () => {
+      const user = await requireLoginOrRedirect();
+      if (!user) return;
+
+      setUserChip(user);
+      setupLogout();
+
+      setupTabs();
+      setupModeToggle();
+      setupSeverityFilters();
+      setupScanForms();
+      setupIssueClickDelegation();
+
+      setupFixButtons();
+
+      setupHistoryUI();
+      await loadRecentAnalyses();
+
+      setScanStatus("Ready.");
+    });
+  </script>
+
+</body>
+
+</html>

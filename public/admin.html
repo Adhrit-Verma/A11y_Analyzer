@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Admin Panel • Accessibility AI Auditor</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+            background: #0b0f1a;
+            color: #e7eaf0;
+        }
+
+        header {
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            background: #0f1730;
+            position: sticky;
+            top: 0;
+        }
+
+        .wrap {
+            padding: 18px;
+            display: grid;
+            gap: 14px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .topRow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .sub {
+            opacity: .75;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .btn {
+            border: 1px solid rgba(255, 255, 255, .14);
+            background: transparent;
+            color: #e7eaf0;
+            padding: 8px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn:hover {
+            border-color: rgba(255, 255, 255, .28);
+        }
+
+        .btnPrimary {
+            border-color: rgba(76, 125, 255, .65);
+            background: rgba(76, 125, 255, .12);
+        }
+
+        .btnDanger {
+            border-color: rgba(255, 80, 80, .55);
+            background: rgba(255, 80, 80, .10);
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: #111a2e;
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            opacity: .9;
+        }
+
+        .big {
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .muted {
+            opacity: .75;
+            font-size: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 14px;
+        }
+
+        .tableWrap {
+            background: #111a2e;
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 10px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            font-size: 13px;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(255, 255, 255, .04);
+            font-weight: 700;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, .03);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            opacity: .9;
+        }
+
+        .tagAdmin {
+            border-color: rgba(76, 125, 255, .55);
+            background: rgba(76, 125, 255, .10);
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .status {
+            font-size: 13px;
+            opacity: .8;
+            min-height: 18px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, .15);
+            background: #0b1224;
+            color: #e7eaf0;
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 700px) {
+            .grid2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modalBackdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .55);
+            display: none;
+            place-items: center;
+            padding: 18px;
+        }
+
+        .modal {
+            width: min(520px, 100%);
+            background: #111a2e;
+            border: 1px solid rgba(255, 255, 255, .10);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .modalHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .x {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            background: transparent;
+            color: #e7eaf0;
+            cursor: pointer;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 12px;
+            opacity: .8;
+            display: block;
+            margin: 10px 0 6px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="topRow">
+            <div>
+                <h1 class="title">Admin Panel</h1>
+                <div class="sub">Manage users • view active sessions • server stats</div>
+            </div>
+            <div class="row">
+                <button id="btnRefresh" class="btn">Refresh</button>
+                <button id="btnNewUser" class="btn btnPrimary">+ New user</button>
+                <button id="btnLogout" class="btn btnDanger">Logout</button>
+            </div>
+        </div>
+        <div id="status" class="status"></div>
+    </header>
+
+    <main class="wrap">
+        <section class="cards">
+            <div class="card">
+                <h3>Active sessions</h3>
+                <div id="statActive" class="big">—</div>
+                <div class="muted">Best-effort based on session store files</div>
+            </div>
+            <div class="card">
+                <h3>Uptime</h3>
+                <div id="statUptime" class="big">—</div>
+                <div class="muted">Node process uptime</div>
+            </div>
+            <div class="card">
+                <h3>Memory (RSS)</h3>
+                <div id="statMem" class="big">—</div>
+                <div class="muted">Resident Set Size</div>
+            </div>
+        </section>
+
+        <section class="tableWrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:160px;">User ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th style="width:120px;">Role</th>
+                        <th style="width:220px; text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTbody"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Modal -->
+    <div id="modalBackdrop" class="modalBackdrop">
+        <div class="modal" role="dialog" aria-modal="true" aria-label="User editor">
+            <div class="modalHeader">
+                <div>
+                    <div id="modalTitle" style="font-weight:800;">New user</div>
+                    <div class="muted">Create or edit a user. Password optional on edit.</div>
+                </div>
+                <button id="modalClose" class="x">✕</button>
+            </div>
+
+            <div class="grid2">
+                <div>
+                    <label>Name</label>
+                    <input id="fName" type="text" />
+                </div>
+                <div>
+                    <label>Email</label>
+                    <input id="fEmail" type="email" />
+                </div>
+            </div>
+
+            <div class="grid2">
+                <div>
+                    <label>Password</label>
+                    <input id="fPassword" type="password" placeholder="(set for new user / optional on edit)" />
+                </div>
+                <div>
+                    <label>Admin?</label>
+                    <div class="row" style="margin-top:10px;">
+                        <input id="fIsAdmin" type="checkbox" />
+                        <span class="muted">Give admin access</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid2">
+                <div>
+                    <label>Admin Panel Password</label>
+                    <input id="fAdminPassword" type="password" placeholder="(required for admin panel access)" />
+                    <div class="muted" style="margin-top:6px;">Must be different from normal password.</div>
+                </div>
+                <div></div>
+            </div>
+
+            <div class="row" style="justify-content:flex-end; margin-top:12px;">
+                <button id="btnSave" class="btn btnPrimary">Save</button>
+            </div>
+
+            <div id="modalErr" class="status" style="color:#ff6b6b;"></div>
+        </div>
+    </div>
+
+    <script>
+        const statusEl = document.getElementById("status");
+        const tbody = document.getElementById("usersTbody");
+
+        const modalBackdrop = document.getElementById("modalBackdrop");
+        const modalClose = document.getElementById("modalClose");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalErr = document.getElementById("modalErr");
+        const fName = document.getElementById("fName");
+        const fEmail = document.getElementById("fEmail");
+        const fPassword = document.getElementById("fPassword");
+        const fIsAdmin = document.getElementById("fIsAdmin");
+        const fAdminPassword = document.getElementById("fAdminPassword");
+        const btnSave = document.getElementById("btnSave");
+
+        let editingId = null;
+        let baseUptimeSec = null;
+        let uptimeTimer = null;
+
+
+
+        function setStatus(msg) { statusEl.textContent = msg || ""; }
+        function escapeHtml(s) {
+            return String(s ?? "")
+                .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;").replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+        async function jsonFetch(url, opts = {}) {
+            const r = await fetch(url, { credentials: "include", ...opts });
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(data.error || data.message || `Request failed (${r.status})`);
+            return data;
+        }
+        function fmtBytes(n) {
+            if (typeof n !== "number") return "—";
+            const units = ["B", "KB", "MB", "GB"];
+            let v = n, i = 0;
+            while (v > 1024 && i < units.length - 1) { v /= 1024; i++; }
+            return `${v.toFixed(v >= 10 ? 0 : 1)} ${units[i]}`;
+        }
+        function fmtUptime(sec) {
+            if (typeof sec !== "number") return "—";
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+            return `${h}h ${m}m ${s}s`;
+        }
+
+        async function requireAdminOrRedirect() {
+            const me = await fetch("/api/auth/me", { credentials: "include" });
+            const data = await me.json().catch(() => ({}));
+
+            if (!data.user) { location.href = "/admin-login.html"; return null; }
+            if (!data.user.is_admin) { location.href = "/"; return null; }
+
+            // ✅ must have logged-in via admin login
+            if (!data.admin_panel) { location.href = "/admin-login.html"; return null; }
+
+            return data.user;
+        }
+
+        window.addEventListener("pageshow", async (e) => {
+            // pageshow fires on normal load + BFCache restore
+            // if user is no longer admin_panel, redirect immediately
+            try {
+                await requireAdminOrRedirect();
+            } catch {
+                location.href = "/admin-login.html";
+            }
+        });
+
+
+
+        function openModal({ title, user }) {
+            modalErr.textContent = "";
+            modalTitle.textContent = title;
+            editingId = user?.id || null;
+            fName.value = user?.name || "";
+            fEmail.value = user?.email || "";
+            fPassword.value = "";
+            fAdminPassword.value = "";
+            fIsAdmin.checked = !!user?.is_admin;
+            modalBackdrop.style.display = "grid";
+            syncAdminPasswordUI();
+        }
+
+        function syncAdminPasswordUI() {
+            const enabled = !!fIsAdmin.checked;
+            fAdminPassword.disabled = !enabled;
+            if (!enabled) fAdminPassword.value = "";
+        }
+        function closeModal() {
+            modalBackdrop.style.display = "none";
+            editingId = null;
+        }
+
+        async function loadStats() {
+            const data = await jsonFetch("/api/admin/stats");
+
+            document.getElementById("statActive").textContent =
+                (data.activeSessions === null ? "—" : String(data.activeSessions));
+
+            document.getElementById("statMem").textContent =
+                fmtBytes(data.memory?.rss);
+
+            // --- Handle uptime ---
+            baseUptimeSec = data.server?.uptimeSec ?? null;
+
+            if (uptimeTimer) {
+                clearInterval(uptimeTimer);
+                uptimeTimer = null;
+            }
+
+            if (typeof baseUptimeSec === "number") {
+                document.getElementById("statUptime").textContent =
+                    fmtUptime(baseUptimeSec);
+
+                uptimeTimer = setInterval(() => {
+                    baseUptimeSec++;
+                    document.getElementById("statUptime").textContent =
+                        fmtUptime(baseUptimeSec);
+                }, 1000);
+            } else {
+                document.getElementById("statUptime").textContent = "—";
+            }
+        }
+
+        function renderUsers(users) {
+            tbody.innerHTML = users.map(u => `
+        <tr data-id="${escapeHtml(u.id)}">
+          <td>${escapeHtml(u.id)}</td>
+          <td>${escapeHtml(u.name)}</td>
+          <td>${escapeHtml(u.email)}</td>
+          <td>
+            ${u.is_admin ? '<span class="tag tagAdmin">admin</span>' : '<span class="tag">user</span>'}
+          </td>
+          <td>
+            <div class="actions">
+              <button class="btn" data-action="edit">Edit</button>
+              <button class="btn btnDanger" data-action="delete">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+        }
+
+        async function loadUsers() {
+            const data = await jsonFetch("/api/admin/users");
+            renderUsers(data.users || []);
+        }
+
+        async function refreshAll() {
+            setStatus("Loading…");
+            try {
+                await Promise.all([loadStats(), loadUsers()]);
+                setStatus("Ready.");
+            } catch (e) {
+                console.error(e);
+                setStatus(e.message || "Failed to load admin data.");
+            }
+        }
+
+        // Events
+        document.getElementById("btnLogout").addEventListener("click", async () => {
+            await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+            location.href = "/admin-login.html";
+        });
+
+        document.getElementById("btnRefresh").addEventListener("click", refreshAll);
+
+        document.getElementById("btnNewUser").addEventListener("click", () => {
+            openModal({ title: "New user", user: { is_admin: false } });
+        });
+
+        fIsAdmin.addEventListener("change", syncAdminPasswordUI);
+
+        modalClose.addEventListener("click", closeModal);
+        modalBackdrop.addEventListener("click", (e) => { if (e.target === modalBackdrop) closeModal(); });
+
+        btnSave.addEventListener("click", async () => {
+            modalErr.textContent = "";
+            const payload = {
+                name: fName.value.trim(),
+                email: fEmail.value.trim(),
+                is_admin: !!fIsAdmin.checked,
+            };
+
+            const pw = fPassword.value;
+            const apw = fAdminPassword.value;
+
+            if (pw && pw.trim().length) payload.password = pw;
+
+            // Only send admin_password if admin is checked AND a value is present
+            if (payload.is_admin && apw && apw.trim().length) {
+                payload.admin_password = apw;
+            }
+            // --- Admin password rules ---
+            if (payload.is_admin) {
+                // For NEW admin users, admin panel password must be provided
+                if (!editingId) {
+                    if (!payload.admin_password) throw new Error("Admin Panel Password is required for admin users.");
+                }
+
+                // Ensure admin password differs from normal password (if both are provided)
+                if (payload.password && payload.admin_password && payload.password === payload.admin_password) {
+                    throw new Error("Admin Panel Password must be different from normal Password.");
+                }
+            }
+
+            try {
+                if (!payload.name || !payload.email) throw new Error("Name and Email are required.");
+
+                if (!editingId) {
+                    if (!payload.password) throw new Error("Password is required for a new user.");
+                    await jsonFetch("/api/admin/users", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    await jsonFetch("/api/admin/users/" + encodeURIComponent(editingId), {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                closeModal();
+                await refreshAll();
+            } catch (e) {
+                modalErr.textContent = e.message || "Save failed.";
+            }
+        });
+
+        tbody.addEventListener("click", async (e) => {
+            const btn = e.target.closest("button[data-action]");
+            if (!btn) return;
+
+            const row = e.target.closest("tr[data-id]");
+            if (!row) return;
+            const id = row.getAttribute("data-id");
+
+            const action = btn.getAttribute("data-action");
+            if (action === "edit") {
+                // Rebuild user from row (quick), or fetch again if you want
+                const name = row.children[1].textContent;
+                const email = row.children[2].textContent;
+                const is_admin = row.children[3].textContent.includes("admin");
+                openModal({ title: "Edit user", user: { id, name, email, is_admin } });
+            }
+
+            if (action === "delete") {
+                if (!confirm("Delete this user?")) return;
+                try {
+                    await jsonFetch("/api/admin/users/" + encodeURIComponent(id), { method: "DELETE" });
+                    await refreshAll();
+                } catch (e) {
+                    alert(e.message || "Delete failed");
+                }
+            }
+        });
+
+        // Init
+        document.addEventListener("DOMContentLoaded", async () => {
+            const u = await requireAdminOrRedirect();
+            if (!u) return;
+            await refreshAll();
+        });
+    </script>
+</body>
+
+</html>
