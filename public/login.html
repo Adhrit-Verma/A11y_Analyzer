@@ -5,120 +5,566 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Login • Accessibility AI Auditor</title>
+
   <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: rgba(15, 23, 42, 0.10);
+      --shadow: 0 18px 55px rgba(2, 6, 23, 0.10);
+      --primary: #2563eb;
+      --primary-2: #1d4ed8;
+      --ring: rgba(37, 99, 235, 0.25);
+      --card: #ffffff;
+      --subtle: #f6f8fc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
-      background: #0b0f1a;
-      color: #e7eaf0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
     }
 
-    .wrap {
+    /* Split Layout */
+    .page {
       min-height: 100vh;
       display: grid;
-      place-items: center;
-      padding: 24px;
+      grid-template-columns: 1fr 1.2fr;
     }
 
+    .left {
+      display: grid;
+      place-items: center;
+      padding: 40px 28px;
+      background:
+        radial-gradient(1200px 800px at 20% -10%, rgba(37, 99, 235, 0.10), transparent 60%),
+        radial-gradient(1000px 700px at 40% 110%, rgba(99, 102, 241, 0.08), transparent 55%),
+        var(--bg);
+      border-right: 1px solid var(--border);
+    }
+
+    .right {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(900px 600px at 75% 35%, rgba(37, 99, 235, 0.12), transparent 60%),
+        radial-gradient(900px 650px at 30% 90%, rgba(14, 165, 233, 0.08), transparent 60%),
+        linear-gradient(180deg, #fbfdff 0%, #f7f9ff 40%, #f6f8fc 100%);
+    }
+
+    /* Card */
     .card {
       width: min(420px, 100%);
-      background: #111a2e;
-      border: 1px solid rgba(255, 255, 255, .08);
-      border-radius: 14px;
-      padding: 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background:
+        radial-gradient(14px 14px at 30% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.0)),
+        linear-gradient(135deg, rgba(37, 99, 235, 1), rgba(99, 102, 241, 1));
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
     }
 
     h1 {
-      margin: 0 0 8px;
-      font-size: 20px;
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
     }
 
-    p {
-      margin: 0 0 14px;
-      opacity: .8;
+    .subtitle {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .title {
+      margin: 10px 0 6px;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    .desc {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
     }
 
     label {
       display: block;
-      margin: 10px 0 6px;
-      font-size: 13px;
-      opacity: .9;
+      margin: 12px 0 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .field {
+      position: relative;
     }
 
     input {
       width: 100%;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, .15);
-      background: #0b1224;
-      color: #e7eaf0;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      transition: box-shadow .15s ease, border-color .15s ease, transform .05s ease;
+    }
+
+    input::placeholder {
+      color: rgba(71, 85, 105, 0.65);
+    }
+
+    input:focus {
+      border-color: rgba(37, 99, 235, 0.45);
+      box-shadow: 0 0 0 4px var(--ring);
     }
 
     button {
       margin-top: 14px;
       width: 100%;
-      padding: 10px;
-      border-radius: 10px;
+      padding: 12px 12px;
+      border-radius: 12px;
       border: 0;
-      background: #4c7dff;
+      background: linear-gradient(180deg, var(--primary), var(--primary-2));
       color: white;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
+      transition: transform .06s ease, filter .15s ease, box-shadow .15s ease;
+      box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
+    }
+
+    button:hover {
+      filter: brightness(1.03);
+    }
+
+    button:active {
+      transform: translateY(1px);
     }
 
     .row {
       display: flex;
-      justify-content: space-between;
+      gap: 10px;
       align-items: center;
-      margin-top: 10px;
+      justify-content: space-between;
+      margin-top: 12px;
       font-size: 13px;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .links {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
     }
 
     a {
-      color: #9bb7ff;
+      color: var(--primary);
       text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(15, 23, 42, 0.08);
+      margin: 14px 0 12px;
     }
 
     .err {
       margin-top: 10px;
-      color: #ff6b6b;
+      color: #b91c1c;
       font-size: 13px;
       white-space: pre-wrap;
+      background: rgba(185, 28, 28, 0.06);
+      border: 1px solid rgba(185, 28, 28, 0.18);
+      padding: 10px 12px;
+      border-radius: 12px;
+      display: none;
+    }
+
+    /* Right Illustration */
+    .scene-wrap {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 40px;
+    }
+
+    .scene {
+      width: min(820px, 92%);
+      height: auto;
+      filter: drop-shadow(0 25px 60px rgba(2, 6, 23, 0.12));
+      animation: floaty 9s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    .slowLight {
+      position: absolute;
+      inset: -30%;
+      background:
+        radial-gradient(closest-side at 55% 45%, rgba(37, 99, 235, 0.18), transparent 60%),
+        radial-gradient(closest-side at 30% 60%, rgba(14, 165, 233, 0.14), transparent 62%),
+        radial-gradient(closest-side at 75% 70%, rgba(99, 102, 241, 0.12), transparent 60%);
+      filter: blur(24px);
+      animation: drift 16s ease-in-out infinite;
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.06;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      mix-blend-mode: multiply;
+    }
+
+    .caption {
+      position: absolute;
+      left: 36px;
+      bottom: 30px;
+      max-width: 520px;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 16px;
+      padding: 14px 14px;
+      box-shadow: 0 22px 60px rgba(2, 6, 23, 0.12);
+    }
+
+    .caption strong {
+      display: block;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+
+    .caption span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    @keyframes floaty {
+
+      0%,
+      100% {
+        transform: translateY(0px) scale(1);
+      }
+
+      50% {
+        transform: translateY(-10px) scale(1.01);
+      }
+    }
+
+    @keyframes drift {
+
+      0%,
+      100% {
+        transform: translate(-2%, -1%) rotate(-2deg);
+      }
+
+      50% {
+        transform: translate(2%, 1%) rotate(2deg);
+      }
+    }
+
+    /* SVG internal motion helpers */
+    .person1 {
+      animation: bob 6s ease-in-out infinite;
+      transform-origin: 50% 80%;
+    }
+
+    .person2 {
+      animation: bob 7.5s ease-in-out infinite;
+      transform-origin: 50% 80%;
+    }
+
+    .person3 {
+      animation: bob 8.5s ease-in-out infinite;
+      transform-origin: 50% 80%;
+    }
+
+    .glow {
+      animation: pulse 5.5s ease-in-out infinite;
+      transform-origin: 50% 50%;
+    }
+
+    @keyframes bob {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-4px);
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 0.55;
+      }
+
+      50% {
+        opacity: 0.85;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 980px) {
+      .page {
+        grid-template-columns: 1fr;
+      }
+
+      .left {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .right {
+        min-height: 420px;
+      }
+
+      .caption {
+        left: 18px;
+        right: 18px;
+        bottom: 18px;
+        max-width: none;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .right {
+        min-height: 360px;
+      }
+
+      .card {
+        padding: 18px;
+        border-radius: 16px;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Login</h1>
-      <p>Sign in to view your recent analyses.</p>
+  <div class="page">
 
-      <form id="loginForm">
-        <label for="email">Email</label>
-        <input id="email" type="email" autocomplete="email" required />
+    <!-- LEFT: Login -->
+    <section class="left">
+      <div class="card">
 
-        <label for="password">Password</label>
-        <input id="password" type="password" autocomplete="current-password" required />
+        <div class="title">Welcome back</div>
+        <p class="desc">Use your account credentials to continue. Your session will be saved securely.</p>
 
-        <button type="submit">Login</button>
-        <div class="row">
-          <span>New here?</span>
-          <a href="/signup.html">Create account</a>
-          <div class="row">
-            <span>Are you also admin?</span>
-            <a href="/admin-login.html">Admin login</a>
+        <form id="loginForm" novalidate>
+          <label for="email">Email</label>
+          <div class="field">
+            <input id="email" type="email" autocomplete="email" placeholder="you@example.com" required />
           </div>
-        </div>
-        <div id="err" class="err"></div>
-      </form>
-    </div>
+
+          <label for="password">Password</label>
+          <div class="field">
+            <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" required />
+          </div>
+
+          <button type="submit">Login</button>
+
+          <div class="row">
+            <div class="links">
+              <span>New here?</span>
+              <a href="/signup.html">Create account</a>
+            </div>
+            <div class="links">
+              <span>Admin?</span>
+              <a href="/admin-login.html">Admin login</a>
+            </div>
+          </div>
+
+          <div id="err" class="err"></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- RIGHT: Illustration + slow motion -->
+    <section class="right" aria-hidden="true" role="presentation">
+      <div class="slowLight"></div>
+      <div class="grain"></div>
+
+      <div class="scene-wrap">
+        <!-- Inline SVG illustration: people outside a door -->
+        <svg class="scene" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
+          focusable="false">
+          <defs>
+            <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#ffffff" />
+              <stop offset="1" stop-color="#f3f6ff" />
+            </linearGradient>
+
+            <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f1f5ff" />
+              <stop offset="1" stop-color="#e9eefc" />
+            </linearGradient>
+
+            <linearGradient id="floor" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#eef2ff" />
+              <stop offset="1" stop-color="#f8fafc" />
+            </linearGradient>
+
+            <radialGradient id="doorGlow" cx="50%" cy="45%" r="60%">
+              <stop offset="0" stop-color="#2563eb" stop-opacity="0.28" />
+              <stop offset="1" stop-color="#2563eb" stop-opacity="0" />
+            </radialGradient>
+
+            <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="8" result="b" />
+              <feColorMatrix in="b" type="matrix" values="1 0 0 0 0
+                        0 1 0 0 0
+                        0 0 1 0 0
+                        0 0 0 0.9 0" />
+            </filter>
+          </defs>
+
+          <!-- Background -->
+          <rect x="0" y="0" width="1200" height="720" fill="url(#bgGrad)" />
+          <rect x="0" y="0" width="1200" height="520" fill="url(#wall)" />
+          <rect x="0" y="520" width="1200" height="200" fill="url(#floor)" />
+
+          <!-- Soft glow near door -->
+          <g class="glow">
+            <ellipse cx="820" cy="315" rx="260" ry="220" fill="url(#doorGlow)" filter="url(#soft)" />
+          </g>
+
+          <!-- Door + frame -->
+          <g>
+            <rect x="720" y="170" width="260" height="380" rx="22" fill="#e7ecfb" stroke="rgba(15,23,42,0.10)" />
+            <rect x="750" y="205" width="200" height="320" rx="18" fill="#0f172a" opacity="0.94" />
+            <rect x="760" y="215" width="180" height="300" rx="16" fill="#0f172a" stroke="#334155" stroke-width="2"
+              opacity="0.92" />
+
+            <!-- Door window/shine -->
+            <path d="M905 235 C 940 290, 920 365, 950 470" stroke="rgba(255,255,255,0.14)" stroke-width="10"
+              stroke-linecap="round" fill="none" />
+
+            <!-- Handle -->
+            <circle cx="925" cy="360" r="10" fill="#cbd5e1" opacity="0.9" />
+            <rect x="932" y="356" width="34" height="8" rx="4" fill="#94a3b8" opacity="0.9" />
+          </g>
+
+          <!-- Queue line / subtle guides -->
+          <g opacity="0.35">
+            <path d="M 240 560 C 420 520, 560 510, 700 520" stroke="#94a3b8" stroke-width="2" fill="none"
+              stroke-dasharray="6 10" />
+          </g>
+
+          <!-- People silhouettes (minimal illustration style) -->
+          <!-- People silhouettes — Accessible geometric version -->
+          <g aria-hidden="true">
+
+            <!-- Person 1 -->
+            <g class="person1">
+              <!-- head stays same -->
+              <circle cx="360" cy="380" r="26" fill="#1e293b" />
+
+              <!-- torso (less rounded) -->
+              <rect x="338" y="410" width="44" height="110" rx="6" fill="#334155" />
+
+              <!-- arms -->
+              <rect x="315" y="418" width="16" height="95" rx="4" fill="#475569" />
+              <rect x="389" y="418" width="16" height="95" rx="4" fill="#475569" />
+
+              <!-- legs -->
+              <rect x="344" y="520" width="14" height="65" rx="3" fill="#0f172a" />
+              <rect x="362" y="520" width="14" height="65" rx="3" fill="#0f172a" />
+            </g>
+
+
+            <!-- Person 2 -->
+            <g class="person2">
+              <circle cx="520" cy="390" r="24" fill="#1e293b" />
+
+              <rect x="500" y="416" width="40" height="102" rx="6" fill="#334155" />
+
+              <rect x="480" y="425" width="14" height="90" rx="4" fill="#475569" />
+              <rect x="546" y="425" width="14" height="90" rx="4" fill="#475569" />
+
+              <rect x="506" y="518" width="13" height="60" rx="3" fill="#0f172a" />
+              <rect x="522" y="518" width="13" height="60" rx="3" fill="#0f172a" />
+            </g>
+
+
+            <!-- Person 3 -->
+            <g class="person3">
+              <circle cx="645" cy="400" r="22" fill="#1e293b" />
+
+              <rect x="628" y="424" width="34" height="95" rx="5" fill="#334155" />
+
+              <rect x="610" y="432" width="13" height="80" rx="4" fill="#475569" />
+              <rect x="667" y="432" width="13" height="80" rx="4" fill="#475569" />
+
+              <rect x="634" y="516" width="12" height="55" rx="3" fill="#0f172a" />
+              <rect x="649" y="516" width="12" height="55" rx="3" fill="#0f172a" />
+            </g>
+
+          </g>
+
+
+          <!-- Foreground soft shapes for depth -->
+          <g opacity="0.55">
+            <circle cx="165" cy="185" r="70" fill="#e2e8f0" />
+            <circle cx="1020" cy="120" r="90" fill="#dbeafe" />
+            <circle cx="1080" cy="620" r="120" fill="#eef2ff" />
+          </g>
+
+          <!-- Floor shadow -->
+          <ellipse cx="540" cy="590" rx="430" ry="60" fill="#0f172a" opacity="0.06" />
+        </svg>
+      </div>
+
+    </section>
+
   </div>
 
   <script>
     const errEl = document.getElementById("err");
+
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      errEl.style.display = "none";
       errEl.textContent = "";
 
       const email = document.getElementById("email").value.trim();
@@ -132,8 +578,10 @@
       });
 
       const data = await r.json().catch(() => ({}));
+
       if (!r.ok) {
         errEl.textContent = data.error || "Login failed";
+        errEl.style.display = "block";
         return;
       }
 
