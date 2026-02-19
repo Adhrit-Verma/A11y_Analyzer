@@ -1,6 +1,35 @@
 // src/services/staticTools.js
 const puppeteer = require("puppeteer");
 const { AxePuppeteer } = require("@axe-core/puppeteer");
+const fs = require("fs");
+const path = require("path");
+
+function resolveChromePath() {
+  const candidates = [
+    process.env.PUPPETEER_EXECUTABLE_PATH,
+    process.env.CHROME_PATH,
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+  ].filter(Boolean);
+
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+
+  // Try Puppeteer cache dir (inside project) without hardcoding version
+  const cacheDir =
+    process.env.PUPPETEER_CACHE_DIR || path.join(process.cwd(), ".cache", "puppeteer");
+  const chromeRoot = path.join(cacheDir, "chrome");
+  if (fs.existsSync(chromeRoot)) {
+    for (const folder of fs.readdirSync(chromeRoot)) {
+      const maybe = path.join(chromeRoot, folder, "chrome-linux64", "chrome");
+      if (fs.existsSync(maybe)) return maybe;
+    }
+  }
+
+  return null;
+}
 
 const lighthouseModule = require("lighthouse");
 const lighthouse =
@@ -78,10 +107,13 @@ function computeSeveritySummaryFromAxe(axeResults) {
 
 // src/services/staticTools.js
 async function runAxe(url) {
+  const executablePath = resolveChromePath();
   const browser = await puppeteer.launch({
     headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    executablePath: executablePath || undefined,
   });
+
 
   try {
     const page = await browser.newPage();
@@ -160,9 +192,12 @@ async function runAxe(url) {
 
 
 async function runLighthouse(url) {
+  const executablePath = resolveChromePath();
   const chrome = await chromeLauncher.launch({
-    chromeFlags: ["--headless", "--no-sandbox", "--disable-setuid-sandbox"]
+    chromePath: executablePath || undefined,
+    chromeFlags: ["--headless", "--no-sandbox", "--disable-setuid-sandbox"],
   });
+
 
   try {
     const options = {
