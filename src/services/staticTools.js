@@ -10,11 +10,41 @@ const chromeLauncher = require("chrome-launcher");
 
 /** Keep your existing logic exactly */
 async function fetchHtml(url) {
-  const resp = await fetch(url);
-  if (!resp.ok) {
-    throw new Error(`Failed to fetch URL: ${resp.status}`);
+  // 1) try normal fetch first (fast)
+  try {
+    const res = await fetch(url, {
+      redirect: "follow",
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "accept":
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "accept-language": "en-US,en;q=0.9",
+      },
+    });
+
+    if (!res.ok) throw new Error(`Failed to fetch URL: ${res.status}`);
+    return await res.text();
+  } catch (e) {
+    // 2) fallback to real browser (works for most 403/WAF sites)
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+    });
+
+    try {
+      const page = await browser.newPage();
+      await page.setUserAgent(
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+      );
+      await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+
+      return await page.content();
+    } finally {
+      await browser.close();
+    }
   }
-  return await resp.text();
 }
 
 function detectSecurityChallenge(html) {
