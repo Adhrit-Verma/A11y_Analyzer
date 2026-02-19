@@ -36,7 +36,16 @@ router.post("/analyze", requireAuth, upload.single("file"), async (req, res) => 
       const engineFindings = await runStaticTools(url);
 
       let html = engineFindings.htmlSnapshot;
-      if (!html) html = await fetchHtml(url);
+      let htmlError = null;
+
+      try {
+        const fetchedHtml = await fetchHtml(url);
+        if (fetchedHtml && fetchedHtml.length > 0) {
+          html = fetchedHtml;
+        }
+      } catch (e) {
+        htmlError = e?.message || String(e);
+      }
 
       const securityProvider = detectSecurityChallenge(html);
 
