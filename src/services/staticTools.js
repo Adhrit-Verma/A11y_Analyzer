@@ -154,17 +154,22 @@ async function runLighthouse(url) {
 }
 
 async function runStaticTools(url) {
-  const [{ axe, htmlSnapshot }, lighthouseResults] = await Promise.all([
-    runAxe(url),
-    runLighthouse(url)
-  ]);
+  const axeP = runAxe(url).catch((e) => ({ __error: e?.message || String(e) }));
+  const lhP = runLighthouse(url).catch((e) => ({ __error: e?.message || String(e) }));
+
+  const [axeRes, lhRes] = await Promise.all([axeP, lhP]);
 
   return {
-    axe,
-    lighthouse: lighthouseResults,
-    htmlSnapshot
+    axe: axeRes?.axe || null,
+    htmlSnapshot: axeRes?.htmlSnapshot || null,
+    lighthouse: lhRes?.audits ? lhRes : null,
+    errors: {
+      axe: axeRes?.__error || null,
+      lighthouse: lhRes?.__error || null,
+    },
   };
 }
+
 
 // ADD inside src/services/staticTools.js
 
@@ -248,7 +253,7 @@ module.exports = {
   detectSecurityChallenge,
   computeSeveritySummaryFromAxe,
   runAxe,
-  runAxeOnHtml, 
+  runAxeOnHtml,
   runLighthouse,
   runStaticTools,
 };
