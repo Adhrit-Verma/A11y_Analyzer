@@ -109,55 +109,75 @@ Your job:
 }
   `.trim();
 
-  const userPayload = {
-    url,
-    html,
-    engineFindings
-  };
+  const userPayload = { url, html, engineFindings };
 
+  // 1) First call
   const resp = await callOpenRouter({
     model: ANALYSIS_MODEL,
     system: systemPrompt,
     user: JSON.stringify(userPayload),
-    jsonMode: true
+    jsonMode: true,
   });
 
-  let parsed;
+  // 2) First parse attempt
   try {
-    parsed = safeParseLLMJson(resp); // ✅ can pass resp now
+    return safeParseLLMJson(resp);
   } catch (err) {
-    console.error("Failed to parse analysis JSON:", resp?.choices?.[0]?.message?.content ?? resp);
-    throw err;
+    console.error(
+      "First parse failed. Retrying with stricter instructions..."
+    );
   }
-  return parsed;
 
+  // 3) Retry call (Fix 2)
+  const retryResp = await callOpenRouter({
+    model: ANALYSIS_MODEL,
+    system:
+      systemPrompt +
+      "\n\nIMPORTANT: Output must be STRICT JSON only. " +
+      "No markdown, no bullet lists, no explanation. " +
+      "Response must start with { and end with }. Nothing else.",
+    user: JSON.stringify(userPayload),
+    jsonMode: true,
+  });
+
+  // 4) Second parse attempt
+  try {
+    return safeParseLLMJson(retryResp);
+  } catch (err2) {
+    console.error(
+      "Retry parse failed too. Falling back. Raw retry content:",
+      retryResp?.choices?.[0]?.message?.content ?? retryResp
+    );
+    return fallbackAnalysisFromAxe({ url, engineFindings });
+  }
 }
+
 
 async function runCodeFixLLM({ analysis, issue, originalHtml }) {
   const systemPrompt = `
-You are an expert accessibility code assistant.
+    You are an expert accessibility code assistant.
 
-You receive:
-- The original HTML of the page.
-- The analysis of accessibility issues.
-- ONE specific issue to fix.
+    You receive:
+    - The original HTML of the page.
+    - The analysis of accessibility issues.
+    - ONE specific issue to fix.
 
-Your job:
-- Produce minimal code changes that fix ONLY this issue.
-- Never rewrite the entire file.
-- Return ONLY valid JSON with this exact structure (no extra text):
+    Your job:
+    - Produce minimal code changes that fix ONLY this issue.
+    - Never rewrite the entire file.
+    - Return ONLY valid JSON with this exact structure (no extra text):
 
-[
-  {
-    "file": "string (e.g. index.html)",
-    "issueTitle": "string",
-    "severity": "critical" | "high" | "moderate" | "low",
-    "explanation": "short explanation of what changed and why",
-    "before": "HTML snippet before",
-    "after": "HTML snippet after"
-  }
-]
-  `.trim();
+    [
+      {
+        "file": "string (e.g. index.html)",
+        "issueTitle": "string",
+        "severity": "critical" | "high" | "moderate" | "low",
+        "explanation": "short explanation of what changed and why",
+        "before": "HTML snippet before",
+        "after": "HTML snippet after"
+      }
+    ]
+      `.trim();
 
   const userPayload = {
     issue,
@@ -184,6 +204,47 @@ Your job:
   }
   return parsed;
 }
+
+function fallbackAnalysisFromAxe({ url, engineFindings }) {
+  const axe = engineFindings?.axe;
+  const severitySummary = computeSeveritySummaryFromAxe(axe);
+
+  const issues = (axe?.violations || []).map((v, idx) => {
+    const impact = (v.impact || "minor").toLowerCase();
+    const severity =
+      impact === "critical" ? "critical" :
+        impact === "serious" ? "high" :
+          impact === "moderate" ? "moderate" : "low";
+
+    return {
+      id: `axe-${v.id}-${idx}`,
+      ruleId: v.id,
+      title: v.help || v.id,
+      description: v.description || "",
+      severity,
+      category: "axe",
+      wcag: Array.isArray(v.tags) ? v.tags : [],
+      quickFix: (v.helpUrl ? `See: ${v.helpUrl}` : ""),
+      instances: (v.nodes || []).slice(0, 8).map((n) => ({
+        selector: n.selector || (Array.isArray(n.target) ? n.target[0] : "") || "",
+        xpath: n.xpath || "",
+        snippet: n.html || "",
+        line: typeof n.line === "number" ? n.line : null,
+      })),
+    };
+  });
+
+  return {
+    analysisId: null,
+    score: null,
+    overview:
+      "LLM output could not be parsed as JSON. Returning tool-based results (axe-core) as a fallback.",
+    tags: ["fallback", "axe"],
+    severitySummary,
+    issues,
+  };
+}
+
 
 module.exports = {
   safeParseLLMJson,
