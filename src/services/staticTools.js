@@ -4,6 +4,14 @@ const { AxePuppeteer } = require("@axe-core/puppeteer");
 const fs = require("fs");
 const path = require("path");
 
+const CHROME_ARGS = [
+  "--no-sandbox",
+  "--disable-setuid-sandbox",
+  "--disable-dev-shm-usage",
+  "--no-zygote",
+  "--disable-gpu",
+];
+
 function resolveChromePath() {
   const candidates = [
     process.env.PUPPETEER_EXECUTABLE_PATH,
@@ -58,7 +66,7 @@ async function fetchHtml(url) {
     // 2) fallback to real browser (works for most 403/WAF sites)
     const browser = await puppeteer.launch({
       headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: CHROME_ARGS,
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
     });
 
@@ -195,7 +203,7 @@ async function runLighthouse(url) {
   const executablePath = resolveChromePath();
   const chrome = await chromeLauncher.launch({
     chromePath: executablePath || undefined,
-    chromeFlags: ["--headless", "--no-sandbox", "--disable-setuid-sandbox"],
+    chromeFlags: ["--headless", ...CHROME_ARGS],
   });
 
 
@@ -219,10 +227,20 @@ async function runLighthouse(url) {
 }
 
 async function runStaticTools(url) {
-  const axeP = runAxe(url).catch((e) => ({ __error: e?.message || String(e) }));
-  const lhP = runLighthouse(url).catch((e) => ({ __error: e?.message || String(e) }));
+  // IMPORTANT: Do NOT run Axe+Lighthouse in parallel on low-memory boxes.
+  // Parallel Chrome processes are the #1 reason for Render returning 502 (process OOM/restart).
+  const parallel = String(process.env.STATIC_TOOLS_PARALLEL || "").trim() === "1";
 
-  const [axeRes, lhRes] = await Promise.all([axeP, lhP]);
+  let axeRes, lhRes;
+
+  if (parallel) {
+    const axeP = runAxe(url).catch((e) => ({ __error: e?.message || String(e) }));
+    const lhP = runLighthouse(url).catch((e) => ({ __error: e?.message || String(e) }));
+    [axeRes, lhRes] = await Promise.all([axeP, lhP]);
+  } else {
+    axeRes = await runAxe(url).catch((e) => ({ __error: e?.message || String(e) }));
+    lhRes = await runLighthouse(url).catch((e) => ({ __error: e?.message || String(e) }));
+  }
 
   return {
     axe: axeRes?.axe || null,

@@ -22,7 +22,6 @@ router.post("/register", async (req, res) => {
     req.session.admin_panel = false;
     res.json({ user });
 
-    res.json({ user });
   } catch (e) {
     res.status(400).json({ error: e.message || "Register failed" });
   }
